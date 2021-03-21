@@ -1,0 +1,45 @@
+version: '3'
+networks:
+    backend:
+        driver: bridge
+    frontend:
+        driver: bridge
+
+volumes:
+    db-data:
+        driver: local
+        
+services:
+    php-fpm:
+        build:
+            context: ./php-fpm
+        ports:
+            - 9003:9003
+        volumes:
+            - ../src:/var/www/app
+        networks:
+            - backend
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+            - "443:443"
+        links:
+            - php-fpm
+        networks:
+            - backend
+            -  frontend
+        volumes:
+            - ../src/:/var/www/app/
+            - ./nginx:/etc/nginx/conf.d
+    postgres:
+        restart: always
+        image: postgres:12-alpine
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=app
+        ports:
+            - ${CONTAINER_DB_PORT:-5432}:5432
