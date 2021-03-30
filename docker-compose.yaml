@@ -1,10 +1,4 @@
 version: '3'
-networks:
-    backend:
-        driver: bridge
-    frontend:
-        driver: bridge
-
 volumes:
     db-data:
         driver: local
@@ -18,9 +12,7 @@ services:
         ports:
             - 9003:9003
         volumes:
-            - ../src:/var/www/app
-        networks:
-            - backend
+            - ../src:/var/www
     nginx:
         image: nginx:latest
         ports:
@@ -28,15 +20,12 @@ services:
             - "443:443"
         links:
             - php-fpm
-        networks:
-            - backend
-            -  frontend
         volumes:
-            - ../src/:/var/www/app/
+            - ../src/:/var/www
             - ./nginx:/etc/nginx/conf.d
     postgres:
         restart: always
-        image: postgres:12-alpine
+        image: postgres:9
         volumes:
             - db-data:/var/lib/postgresql/data
         environment:
@@ -65,3 +54,11 @@ services:
         ports:
             - "9200:9200"
             - "9300:9300"
+    workspace:
+        build:
+            context: ./workspace
+        volumes:
+            - ../src/:/var/www/
+            - ~/.ssh/:/root/.ssh
+        ports:
+            - "2222:22"
